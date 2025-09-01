@@ -1,0 +1,27 @@
+gender does not matter
+senior citizen evenly distributed
+if no dependents, more likely to churn
+internet service has affect on churn (fiber optic service user more likely churned, indicates problems)
+online security with no churned more, indicates there is not enough awareness for it
+no to online backup churned more,
+no to device protection churned more
+no to tech-support churned more
+streaming-tv, streaming-movies barely makes difference
+customer with month-to-month contract churned more
+customer with paperless-billing, electronic-check churned more
+
+1869 churned:
+no to partner 2x yes to partner 1x
+~1500 churned are have no dependents
+~1700 churned are have phone-service
+~1300 churned are using fiber-optic internet service
+~1500 churned are not using online security service
+~1200 churned are not using online backup
+~1200 churned are not using device protection
+~1500 churned are not using tech-support
+~1700 churned are have month-to-month contract
+~1400 churned are using paperless billing
+~1100 churned are using electronic check
+
+- early month of contract user tends to leave more
+- high monthly cost affects churn
