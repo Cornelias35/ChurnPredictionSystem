@@ -3,3 +3,5 @@
 .env
 notebooks/wandb
 notebooks/catboost_info
+src/artifacts
+src/wandb

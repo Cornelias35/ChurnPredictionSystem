@@ -1,3 +1,4 @@
+wandb
 catboost
 xgboost
 imbalanced-learn
