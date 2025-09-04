@@ -1,2 +1,5 @@
 .idea
 .venv
+.env
+notebooks/wandb
+notebooks/catboost_info
