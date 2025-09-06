@@ -87,8 +87,8 @@ def prepare_train_dataset(test_size_=0.2, random_state_=42):
     df[service_cols] = df[service_cols].apply(
         lambda x: x.map({"Yes": 1, "No": 0, "No internet service": 0, "No phone service": 0}))
 
-    df = pd.get_dummies(df, columns=multi_cols, drop_first=True, dtype=np.int8)  # drop_first avoids multicollinearity
-
+    df = pd.get_dummies(df, columns=multi_cols, drop_first=True, dtype=np.int8)
+    df.columns = [col.replace(" ", "_").replace("(", "").replace(")", "") for col in df.columns]
 
     #log_cleaned_data(df, artifact_name="cleaned-churn-data", version="v1")
 

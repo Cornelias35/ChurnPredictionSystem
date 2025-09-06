@@ -28,6 +28,31 @@ AVAILABLE_METRICS = {
     "f1":f1_score
 }
 
+class PredictionData(BaseModel):
+    SeniorCitizen: int
+    Partner: int
+    Dependents: int
+    tenure: int
+    PhoneService: int
+    MultipleLines: int
+    OnlineSecurity: int
+    OnlineBackup: int
+    DeviceProtection: int
+    TechSupport: int
+    StreamingTV: int
+    StreamingMovies: int
+    PaperlessBilling: int
+    MonthlyCharges: float
+    TotalCharges: float
+    gender_Male: int
+    InternetService_Fiber_optic: int
+    InternetService_No: int
+    Contract_One_year: int
+    Contract_Two_year: int
+    PaymentMethod_Credit_card_automatic: int
+    PaymentMethod_Electronic_check: int
+    PaymentMethod_Mailed_check: int
+
 class TrainingRequest(BaseModel):
     model_name: str
     parameters: Dict[str, Any] = {}
@@ -40,7 +65,7 @@ class TrainingRequest(BaseModel):
 class PredictionRequest(BaseModel):
     model_name: str
     experiment_name: str = "customer-churn"
-    data: List[Dict[str, Any]]
+    data: List[PredictionData]
 
 class ModelResponse(BaseModel):
     model_name: str

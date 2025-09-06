@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from .serving import ModelResponse, PredictionResponse, PredictionRequest, TrainingRequest, AVAILABLE_MODELS, AVAILABLE_METRICS
 from contextlib import asynccontextmanager
 from .models.train import train_model
-
+from .models.predict import prediction
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
@@ -46,4 +46,4 @@ def train_model_endpoint(training_request: TrainingRequest) -> ModelResponse:
 @app.post("/prediction")
 def prediction_endpoint(prediction_request: PredictionRequest) -> PredictionResponse:
     """Prediction"""
-    #doing something
+    return prediction(prediction_request)
