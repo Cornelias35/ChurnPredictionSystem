@@ -4,6 +4,7 @@ import logging
 from fastapi import FastAPI
 from .serving import ModelResponse, PredictionResponse, PredictionRequest, TrainingRequest, AVAILABLE_MODELS, AVAILABLE_METRICS
 from contextlib import asynccontextmanager
+from .models.train import train_model
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,7 +35,14 @@ async def get_available_metrics():
 @app.post("/train_model")
 def train_model_endpoint(training_request: TrainingRequest) -> ModelResponse:
     """Train a model"""
-    # doing something
+    if training_request.model_name not in AVAILABLE_MODELS:
+        return ModelResponse(
+            model_name=training_request.model_name,
+            best_score=0.0,
+            metrics={},
+            status="Model not available"
+        )
+    return train_model(training_request)
 @app.post("/prediction")
 def prediction_endpoint(prediction_request: PredictionRequest) -> PredictionResponse:
     """Prediction"""

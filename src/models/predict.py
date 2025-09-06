@@ -1,6 +1,6 @@
 import wandb
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-
+from ..serving.request_models import PredictionRequest, PredictionResponse
 def prediction(model, config, x_test_, y_test_):
     """
     Evaluate a trained model on test data and log results to W&B.
@@ -36,7 +36,4 @@ def prediction(model, config, x_test_, y_test_):
         "recall": recall,
         "f1": f1,
     }
-    with wandb.init(project=config["project_name"], name=config["run_name"], config=config.get("params", {})) as run:
-        run.log(results)
-
     return results

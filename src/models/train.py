@@ -3,62 +3,73 @@ from imblearn.pipeline import Pipeline
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.model_selection import StratifiedKFold
 from imblearn.over_sampling import SMOTE
+import mlflow
+import mlflow.sklearn
 import wandb
 import joblib
 from wandb.errors import CommError
 import os
+from ..serving.request_models import AVAILABLE_MODELS, TrainingRequest, ModelResponse
+from .evaluate import get_metrics
 
-def train_model(model, param_grid, artifact_name):
+def train_model(train_request : TrainingRequest):
     """
     Train a machine learning model with hyperparameter search and SMOTE
     oversampling, using cross-validation for evaluation.
 
     Parameters
     ----------
-    model : estimator object
-        A scikit-learn compatible estimator (e.g., RandomForestClassifier,
-        LogisticRegression) to be trained.
-    param_grid : dict
-        Dictionary with hyperparameter search space for RandomizedSearchCV.
-        Must include a key 'model_name' specifying the pipeline step name
-        for the model.
-        Other values should be model specific, refer to model documentation.
+    :param train_request: TrainingRequest
 
     Returns
     -------
     best_model : sklearn.pipeline.Pipeline
         The fitted pipeline containing the best hyperparameters and the
         trained model.
-    """
-    run = wandb.init(project="customer-churn", job_type="train-model")
 
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    X_train, X_test, y_train, y_test = load_dataset(test_size_=0.25)
+    """
+    cv = StratifiedKFold(n_splits=train_request.cv_folds, shuffle=True, random_state=42)
+
+    X_train, X_test, y_train, y_test = load_dataset(test_size_=train_request.test_size)
+    model_class = AVAILABLE_MODELS[train_request.model_name]
+    model = model_class()
 
     pipeline = Pipeline([
         ("smote", SMOTE(random_state=42)),
-        (param_grid['model_name'], model)
+        (train_request.model_name, model)
     ])
 
     search = RandomizedSearchCV(
         estimator=pipeline,
-        param_distributions=param_grid,
-        n_iter=20,
-        scoring="recall",
+        param_distributions=train_request.parameters,
+        n_iter=train_request.n_iter,
+        scoring=train_request.best_metric,
         cv=cv,
         random_state=42,
         n_jobs=-1
     )
     search.fit(X_train, y_train)
     best_model = search.best_estimator_
+    y_pred = best_model.predict(X_test)
 
-    model_path = f"{artifact_name}.pkl"
-    artifact = wandb.Artifact(artifact_name, type="model")
-    artifact.add_file(model_path)
-    run.log_artifact(artifact)
+    if hasattr(best_model, "predict_proba"):
+        y_pred_proba = best_model.predict_proba(X_test)[:, 1]
+    elif hasattr(best_model, "decision_function"):
+        y_pred_proba = best_model.decision_function(X_test)
+    else:
+        y_pred_proba = None
+    results = get_metrics(y_test, y_pred, y_pred_proba)
 
-    run.finish()
-    return best_model
+    model_path = f"{train_request.experiment_name}.pkl"
+    joblib.dump(best_model, model_path)
+
+    return ModelResponse(
+        model_name=train_request.model_name,
+        best_score=results[train_request.best_metric],
+        metrics=results,
+        status="Completed"
+
+    )
 
 def load_or_train_model(model, param_grid, artifact_name="churn-model"):
     """

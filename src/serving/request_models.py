@@ -8,6 +8,7 @@ from catboost import CatBoostClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 AVAILABLE_MODELS = {
     "knn": KNeighborsClassifier,
@@ -20,7 +21,12 @@ AVAILABLE_MODELS = {
     "naive_bayes": GaussianNB,
 }
 
-AVAILABLE_METRICS = ["accuracy", "precision", "recall", "f1"]
+AVAILABLE_METRICS = {
+    "accuracy":accuracy_score,
+    "precision":precision_score,
+    "recall":recall_score,
+    "f1":f1_score
+}
 
 class TrainingRequest(BaseModel):
     model_name: str

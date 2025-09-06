@@ -75,7 +75,7 @@ def prepare_train_dataset(test_size_=0.2, random_state_=42):
         "No": 0,
         "Yes": 1,
     }
-
+    df = df.drop("customerID", axis=1)
     df["Churn"] = df["Churn"].map(churn_map)
 
     binary_cols = ["Partner", "Dependents", "PhoneService", "PaperlessBilling"]
@@ -90,7 +90,7 @@ def prepare_train_dataset(test_size_=0.2, random_state_=42):
     df = pd.get_dummies(df, columns=multi_cols, drop_first=True, dtype=np.int8)  # drop_first avoids multicollinearity
 
 
-    log_cleaned_data(df, artifact_name="cleaned-churn-data", version="v1")
+    #log_cleaned_data(df, artifact_name="cleaned-churn-data", version="v1")
 
 
 
@@ -117,25 +117,24 @@ def log_cleaned_data(df, artifact_name="cleaned-churn-data", version="v1"):
     version : str, optional
         The version tag for the artifact (default: "v1").
     """
-    run = wandb.init(project="customer-churn", job_type="data-prep")
+    with wandb.init(project="customer-shurn", job_type="cleaned-churn-data") as run:
 
-    file_path = f"{artifact_name}.csv"
-    df.to_csv(file_path, index=False)
+        file_path = f"{artifact_name}.csv"
+        df.to_csv(file_path, index=False)
 
-    artifact = wandb.Artifact(
-        name=artifact_name,
-        type="dataset",
-        description="Cleaned Telco Customer Churn dataset",
-        metadata={"rows": df.shape[0], "columns": df.shape[1]}
-    )
-    artifact.add_file(file_path)
+        artifact = wandb.Artifact(
+            name=artifact_name,
+            type="dataset",
+            description="Cleaned Telco Customer Churn dataset",
+            metadata={"rows": df.shape[0], "columns": df.shape[1]}
+        )
+        artifact.add_file(file_path)
 
-    run.log_artifact(artifact)
+        run.log_artifact(artifact)
 
-    churn_table = wandb.Table(dataframe=df.head(200))
-    run.log({"cleaned_churn_preview": churn_table})
+        churn_table = wandb.Table(dataframe=df.head(200))
+        run.log({"cleaned_churn_preview": churn_table})
 
-    run.finish()
 
 def load_dataset(test_size_=0.2, random_state_=42, artifact_name="cleaned-churn-data"):
     """
@@ -158,31 +157,9 @@ def load_dataset(test_size_=0.2, random_state_=42, artifact_name="cleaned-churn-
     y_train : pd.Series
     y_test : pd.Series
     """
-    run = wandb.init(project="customer-churn", job_type="load-data", reinit=True)
 
-    try:
-        artifact = run.use_artifact(f"{artifact_name}:latest")
-        artifact_dir = artifact.download()
-        file_path = os.path.join(artifact_dir, f"{artifact_name}.csv")
-
-        df = pd.read_csv(file_path)
-
-    except wandb.errors.CommError:
-        x_train, x_test, y_train, y_test = prepare_train_dataset(
-            test_size_=test_size_, random_state_=random_state_
-        )
-        run.finish()
-        return x_train, x_test, y_train, y_test
-
-    num_columns = ["tenure", "MonthlyCharges", "TotalCharges"]
-
-    X = df.drop("Churn", axis=1)
-    y = df["Churn"]
-
-    x_train, x_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size_, random_state=random_state_
+    x_train, x_test, y_train, y_test = prepare_train_dataset(
+        test_size_=test_size_, random_state_=random_state_
     )
-    x_train, x_test = scale_numeric_columns(x_train, x_test, num_columns)
-    run.finish()
     return x_train, x_test, y_train, y_test
 
