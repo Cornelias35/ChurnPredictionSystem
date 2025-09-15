@@ -1,16 +1,11 @@
-from src.data_prep.preprocess import load_dataset
+from app.data_prep.preprocess import load_dataset
 from imblearn.pipeline import Pipeline
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.model_selection import StratifiedKFold
 from imblearn.over_sampling import SMOTE
-import mlflow
-import mlflow.sklearn
-import wandb
 import joblib
-from wandb.errors import CommError
-import os
-from ..serving.request_models import AVAILABLE_MODELS, TrainingRequest, ModelResponse
-from .evaluate import get_metrics
+from app.serving.request_models import AVAILABLE_MODELS, TrainingRequest, ModelResponse
+from app.models.evaluate import get_metrics
 
 def train_model(train_request : TrainingRequest):
     """
@@ -60,7 +55,7 @@ def train_model(train_request : TrainingRequest):
         y_pred_proba = None
     results = get_metrics(y_test, y_pred, y_pred_proba)
 
-    model_path = f"{train_request.experiment_name}.pkl"
+    model_path = f"app/paths/{train_request.model_name}.pkl"
     joblib.dump(best_model, model_path)
 
     return ModelResponse(
@@ -70,42 +65,5 @@ def train_model(train_request : TrainingRequest):
         status="Completed"
 
     )
-
-def load_or_train_model(model, param_grid, artifact_name="churn-model"):
-    """
-    Load the latest model from Weights & Biases if available,
-    otherwise train a new model and upload it.
-
-    Parameters
-    ----------
-    model : estimator object
-        A scikit-learn compatible estimator to be trained if no
-        artifact is found.
-    param_grid : dict
-        Dictionary with hyperparameter search space for RandomizedSearchCV.
-        Must include a key 'model_name' specifying the pipeline step name
-        for the model.
-    artifact_name : str, optional (default="churn-model")
-        The name of the model artifact in W&B.
-
-    Returns
-    -------
-    best_model : sklearn.pipeline.Pipeline
-        The fitted pipeline containing the best hyperparameters and the
-        trained model.
-    """
-    run = wandb.init(project="customer-churn", job_type="load-model", reinit=True)
-
-    try:
-        artifact = run.use_artifact(f"{artifact_name}:latest")
-        artifact_dir = artifact.download()
-        model_path = os.path.join(artifact_dir, f"{artifact_name}.pkl")
-        best_model = joblib.load(model_path)
-        run.finish()
-        return best_model
-
-    except CommError:
-        run.finish()
-        return train_model(model, param_grid, artifact_name=artifact_name)
 
 

@@ -29,29 +29,26 @@ AVAILABLE_METRICS = {
 }
 
 class PredictionData(BaseModel):
-    SeniorCitizen: int
-    Partner: int
-    Dependents: int
-    tenure: int
-    PhoneService: int
-    MultipleLines: int
-    OnlineSecurity: int
-    OnlineBackup: int
-    DeviceProtection: int
-    TechSupport: int
-    StreamingTV: int
-    StreamingMovies: int
-    PaperlessBilling: int
-    MonthlyCharges: float
-    TotalCharges: float
-    gender_Male: int
-    InternetService_Fiber_optic: int
-    InternetService_No: int
-    Contract_One_year: int
-    Contract_Two_year: int
-    PaymentMethod_Credit_card_automatic: int
-    PaymentMethod_Electronic_check: int
-    PaymentMethod_Mailed_check: int
+    customerID : str
+    gender : str
+    SeniorCitizen : int
+    Partner : str
+    Dependents : str
+    tenure : int
+    PhoneService : str
+    MultipleLines : str
+    InternetService : str
+    OnlineSecurity : str
+    OnlineBackup : str
+    DeviceProtection : str
+    TechSupport : str
+    StreamingTV : str
+    StreamingMovies : str
+    Contract : str
+    PaperlessBilling : str
+    PaymentMethod : str
+    MonthlyCharges : float
+    TotalCharges : str
 
 class TrainingRequest(BaseModel):
     model_name: str

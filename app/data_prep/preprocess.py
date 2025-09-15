@@ -4,15 +4,34 @@ import logging
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import wandb
+import joblib
 import os
 
-def scale_numeric_columns(x_train_, x_test_, numeric_columns_):
-    scaler = StandardScaler()
-    x_train_[numeric_columns_] = scaler.fit_transform(x_train_[numeric_columns_])
-    x_test_[numeric_columns_] = scaler.transform(x_test_[numeric_columns_])
+def scale_numeric_columns(numeric_columns_, x_train_, x_test_ = None, ):
 
-    return x_train_, x_test_
+    scaler_path = "app/paths/scaler.pkl"
 
+    if os.path.exists(scaler_path):
+        scaler = joblib.load(scaler_path)
+    else:
+        scaler = StandardScaler()
+        scaler.fit(x_train_[numeric_columns_])
+        joblib.dump(scaler, scaler_path)
+    x_train_[numeric_columns_] = scaler.transform(x_train_[numeric_columns_])
+
+    if x_test_ is not None:
+        x_test_[numeric_columns_] = scaler.transform(x_test_[numeric_columns_])
+        return x_train_, x_test_
+    return x_train_
+
+def transforming_data(df, binary_cols, service_cols, multi_cols):
+    df[binary_cols] = df[binary_cols].apply(lambda x: x.map({"Yes": 1, "No": 0}))
+    df[service_cols] = df[service_cols].apply(
+        lambda x: x.map({"Yes": 1, "No": 0, "No internet service": 0, "No phone service": 0}))
+    df = pd.get_dummies(df, columns=multi_cols, drop_first=True, dtype=np.int8)
+    df.columns = [col.replace(" ", "_").replace("(", "").replace(")", "") for col in df.columns]
+
+    return df
 
 def prepare_train_dataset(test_size_=0.2, random_state_=42):
     """
@@ -60,7 +79,7 @@ def prepare_train_dataset(test_size_=0.2, random_state_=42):
     """
 
     try:
-        df = pd.read_csv('../dataset/telco-customer-churn.csv')
+        df = pd.read_csv('app/dataset/telco-customer-churn.csv')
     except FileNotFoundError:
         logging.error('Could not find train.csv')
         raise FileNotFoundError
@@ -83,23 +102,14 @@ def prepare_train_dataset(test_size_=0.2, random_state_=42):
                     "StreamingMovies"]
     multi_cols = ["gender", "InternetService", "Contract", "PaymentMethod"]
 
-    df[binary_cols] = df[binary_cols].apply(lambda x: x.map({"Yes": 1, "No": 0}))
-    df[service_cols] = df[service_cols].apply(
-        lambda x: x.map({"Yes": 1, "No": 0, "No internet service": 0, "No phone service": 0}))
-
-    df = pd.get_dummies(df, columns=multi_cols, drop_first=True, dtype=np.int8)
-    df.columns = [col.replace(" ", "_").replace("(", "").replace(")", "") for col in df.columns]
-
-    #log_cleaned_data(df, artifact_name="cleaned-churn-data", version="v1")
-
-
+    df = transforming_data(df, binary_cols, service_cols, multi_cols)
 
     X = df.drop("Churn", axis=1)
     y = df["Churn"]
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size_, random_state=random_state_)
 
-    x_train, x_test = scale_numeric_columns(x_train, x_test, num_columns)
+    x_train, x_test = scale_numeric_columns(x_train_=x_train, x_test_=x_test, numeric_columns_=num_columns)
 
     return x_train, x_test, y_train, y_test
 

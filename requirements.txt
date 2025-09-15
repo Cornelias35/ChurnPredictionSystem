@@ -1,3 +1,7 @@
+joblib
+fastapi
+uvicorn
+pydantic
 wandb
 catboost
 xgboost

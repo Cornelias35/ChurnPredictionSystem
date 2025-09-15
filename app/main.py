@@ -2,10 +2,10 @@ import os
 from dotenv import load_dotenv
 import logging
 from fastapi import FastAPI
-from .serving import ModelResponse, PredictionResponse, PredictionRequest, TrainingRequest, AVAILABLE_MODELS, AVAILABLE_METRICS
+from app.serving import ModelResponse, PredictionResponse, PredictionRequest, TrainingRequest, AVAILABLE_MODELS, AVAILABLE_METRICS
 from contextlib import asynccontextmanager
-from .models.train import train_model
-from .models.predict import prediction
+from app.models.train import train_model
+from app.models.predict import prediction
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
@@ -30,7 +30,7 @@ async def get_available_models():
 @app.get("/metrics")
 async def get_available_metrics():
     """Get list of available metrics for optimization"""
-    return {"available_metrics": AVAILABLE_METRICS}
+    return {"available_metrics": list(AVAILABLE_METRICS.keys())}
 
 @app.post("/train_model")
 def train_model_endpoint(training_request: TrainingRequest) -> ModelResponse:
