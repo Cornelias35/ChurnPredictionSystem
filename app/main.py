@@ -6,10 +6,11 @@ from app.serving import ModelResponse, PredictionResponse, PredictionRequest, Tr
 from contextlib import asynccontextmanager
 from app.models.train import train_model
 from app.models.predict import prediction
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        load_dotenv(dotenv_path="../.env")
+        load_dotenv(dotenv_path=".env")
         os.environ["WANDB_API_KEY"] = os.getenv("WANDB_API_KEY")
     except FileNotFoundError:
         logging.error('Could not find WANDB_API_KEY')

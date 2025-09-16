@@ -28,7 +28,7 @@ def transforming_data(df, binary_cols, service_cols, multi_cols):
     df[binary_cols] = df[binary_cols].apply(lambda x: x.map({"Yes": 1, "No": 0}))
     df[service_cols] = df[service_cols].apply(
         lambda x: x.map({"Yes": 1, "No": 0, "No internet service": 0, "No phone service": 0}))
-    df = pd.get_dummies(df, columns=multi_cols, drop_first=True, dtype=np.int8)
+    df = pd.get_dummies(df, columns=multi_cols, dtype=np.int8)
     df.columns = [col.replace(" ", "_").replace("(", "").replace(")", "") for col in df.columns]
 
     return df

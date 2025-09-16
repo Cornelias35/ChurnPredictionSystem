@@ -32,18 +32,33 @@ def prediction(prediction_request: PredictionRequest) -> PredictionResponse:
     binary_cols = ["Partner", "Dependents", "PhoneService", "PaperlessBilling"]
     service_cols = ["MultipleLines", "OnlineSecurity", "OnlineBackup", "DeviceProtection", "TechSupport", "StreamingTV",
                     "StreamingMovies"]
-    multi_cols = ["gender", "InternetService", "Contract", "PaymentMethod"]
 
-    df = transforming_data(df, binary_cols, service_cols, multi_cols)
+    df[binary_cols] = df[binary_cols].apply(lambda x: x.map({"Yes": 1, "No": 0}))
+
+    df[service_cols] = df[service_cols].apply(
+        lambda x: x.map({"Yes": 1, "No": 0, "No internet service": 0, "No phone service": 0}))
+
+    df["gender_Female"] = (df["gender"] == "Female").astype(int)
+    df["gender_Male"] = (df["gender"] == "Male").astype(int)
+
+    df["InternetService_DSL"] = (df["InternetService"] == "DSL").astype(int)
+    df["InternetService_Fiber_optic"] = (df["InternetService"] == "Fiber optic").astype(int)
+    df["InternetService_No"] = (df["InternetService"] == "No").astype(int)
+
+    df["Contract_Month-to-month"] = (df["Contract"] == "Month-to-month").astype(int)
+    df["Contract_One_year"] = (df["Contract"] == "One year").astype(int)
+    df["Contract_Two_year"] = (df["Contract"] == "Two year").astype(int)
+
+    df["PaymentMethod_Bank_transfer_automatic"] = (df["PaymentMethod"] == "Bank transfer (automatic)").astype(int)
+    df["PaymentMethod_Credit_card_automatic"] = (df["PaymentMethod"] == "Credit card (automatic)").astype(int)
+    df["PaymentMethod_Electronic_check"] = (df["PaymentMethod"] == "Electronic check").astype(int)
+    df["PaymentMethod_Mailed_check"] = (df["PaymentMethod"] == "Mailed check").astype(int)
+
+    df = df.drop(["Contract", "InternetService", "PaymentMethod", "gender"], axis=1)
 
     num_columns = ["tenure", "MonthlyCharges", "TotalCharges"]
 
     df = scale_numeric_columns(x_train_=df, numeric_columns_=num_columns)
-    print(df.head(1))
-    print("-----------------------------")
-    print(df.columns)
-    print("-----------------------------")
-    # Make predictions
     preds = model.predict(df)
 
     return PredictionResponse(predictions=preds.tolist(), status="success")
