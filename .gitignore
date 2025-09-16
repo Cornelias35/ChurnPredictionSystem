@@ -2,4 +2,6 @@
 .venv
 .env
 notebooks/hold.txt
-paths/*
+app/paths/**
+mlartifacts/
+mlruns/

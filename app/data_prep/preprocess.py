@@ -3,7 +3,6 @@ import numpy as np
 import logging
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-import wandb
 import joblib
 import os
 
@@ -112,39 +111,6 @@ def prepare_train_dataset(test_size_=0.2, random_state_=42):
     x_train, x_test = scale_numeric_columns(x_train_=x_train, x_test_=x_test, numeric_columns_=num_columns)
 
     return x_train, x_test, y_train, y_test
-
-
-def log_cleaned_data(df, artifact_name="cleaned-churn-data", version="v1"):
-    """
-    Log the cleaned dataset to Weights & Biases as an artifact.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        The cleaned dataset to log.
-    artifact_name : str, optional
-        The name of the artifact (default: "cleaned-churn-data").
-    version : str, optional
-        The version tag for the artifact (default: "v1").
-    """
-    with wandb.init(project="customer-shurn", job_type="cleaned-churn-data") as run:
-
-        file_path = f"{artifact_name}.csv"
-        df.to_csv(file_path, index=False)
-
-        artifact = wandb.Artifact(
-            name=artifact_name,
-            type="dataset",
-            description="Cleaned Telco Customer Churn dataset",
-            metadata={"rows": df.shape[0], "columns": df.shape[1]}
-        )
-        artifact.add_file(file_path)
-
-        run.log_artifact(artifact)
-
-        churn_table = wandb.Table(dataframe=df.head(200))
-        run.log({"cleaned_churn_preview": churn_table})
-
 
 def load_dataset(test_size_=0.2, random_state_=42, artifact_name="cleaned-churn-data"):
     """

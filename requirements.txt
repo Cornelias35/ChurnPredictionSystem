@@ -2,7 +2,6 @@ joblib
 fastapi
 uvicorn
 pydantic
-wandb
 catboost
 xgboost
 imbalanced-learn

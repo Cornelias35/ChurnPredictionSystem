@@ -1,7 +1,9 @@
+import os
+from dotenv import load_dotenv
 from app.serving.request_models import PredictionRequest, PredictionResponse
-import joblib
 import pandas as pd
-from app.data_prep.preprocess import transforming_data, scale_numeric_columns
+from app.data_prep.preprocess import scale_numeric_columns
+import mlflow
 
 def prediction(prediction_request: PredictionRequest) -> PredictionResponse:
     """
@@ -16,12 +18,18 @@ def prediction(prediction_request: PredictionRequest) -> PredictionResponse:
     results : dict
         Dictionary with evaluation metrics: accuracy, precision, recall, f1.
     """
+    load_dotenv()
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
+    mlflow.set_tracking_uri(uri=tracking_uri)
 
+    model_name = f"{prediction_request.experiment_name}-{prediction_request.model_name}"
+    model_version = "latest"
+    model_uri = f"models:/{model_name}/{model_version}"
+    model = mlflow.sklearn.load_model(model_uri)
+    print(f"Model loaded: {model}")
 
-    model_path = prediction_request.model_name
-    model = joblib.load(f"app/paths/{model_path}.pkl")
     if model is None:
-        raise Exception(f"Model {model_path} not found")
+        raise Exception(f"Model not found")
     df = pd.DataFrame([d.model_dump() for d in prediction_request.data])
 
     df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")

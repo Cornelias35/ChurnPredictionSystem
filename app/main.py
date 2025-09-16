@@ -9,12 +9,7 @@ from app.models.predict import prediction
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    try:
-        load_dotenv(dotenv_path=".env")
-        os.environ["WANDB_API_KEY"] = os.getenv("WANDB_API_KEY")
-    except FileNotFoundError:
-        logging.error('Could not find WANDB_API_KEY')
-        raise FileNotFoundError
+    load_dotenv(dotenv_path=".env")
     yield
 
 app = FastAPI(title="Customer Churn Prediction", version="1.0", lifespan=lifespan)
@@ -22,6 +17,10 @@ app = FastAPI(title="Customer Churn Prediction", version="1.0", lifespan=lifespa
 @app.get("/")
 async def root():
     return {"message": "ML Model Training and Prediction API"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
 @app.get("/models")
 async def get_available_models():
